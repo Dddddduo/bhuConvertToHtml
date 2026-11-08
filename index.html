@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doc to HTML Converter</title>
+    <link rel="stylesheet" href="./index.css">
+    <link rel="stylesheet" href="./result.css">
+</head>
+
+<body>
+<div class="app">
+    <div class="main">
+        <div class="box">
+            <a id="hitokoto_text"
+               style="text-decoration: none;
+               color: inherit;
+               font-size: 24px;
+               font-weight: bold;
+               display: block;
+               margin-bottom: 20px;">
+                Upload a Document
+            </a>
+            <input type="file" id="fileInput" accept=".md" required>
+            <button type="button" id="convertButton">通用(Convert)</button>
+            <button type="button" id="convertButtonRecent4">大一上(近代史)</button>
+            <button type="button" id="convertButtonRecent3">大一下(思政)</button>
+            <button type="button" id="convertButtonRecent5">大二上(马克思)</button>
+            <button type="button" id="convertButtonRecent1">大二下(习概)</button>
+            <button type="button" id="convertButtonRecent2">大二下(毛概)</button>
+        </div>
+    </div>
+    <div class="container">
+        <div class="resultMain">
+            <div class="result"></div>
+            <div class="sidebar">
+                <h3 id="navTitle">题目导航</h3>
+                <ul class="question-list"></ul>
+            </div>
+        </div>
+        <div class="floor">
+            <button type="button" class="resetButton">清空历史记录</button>
+            <button type="button" class="saveButton">保存做题记录</button>
+        </div>
+    </div>
+    <div class="header" style="text-align: center; margin-bottom: 30px;">
+        <div class="footer">
+            本站已通过工信部认证&nbsp;&nbsp;
+            |&nbsp;&nbsp;
+            <a href="https://github.com/luoqwe123/convertToHtml" target="_blank">项目开源地址</a>&nbsp;&nbsp;
+            |&nbsp;&nbsp;
+            <a href="https://gczdy.blog.csdn.net/?type=blog" target="_blank">多多世界第一可爱!</a>&nbsp;&nbsp;
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // 将请求和更新逻辑封装成一个函数
+        function fetchAndUpdateHitokoto() {
+            const targetUrl = 'https://v1.hitokoto.cn/?c=j';
+            const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(targetUrl);
+
+            fetch(proxyUrl)
+                .then(response => {
+                    // 只有当响应状态码为 200-299 时才继续
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data && data.contents) {
+                        const originalResponse = JSON.parse(data.contents);
+                        const hitokotoElement = document.querySelector('#hitokoto_text');
+                        if (hitokotoElement) {
+                            hitokotoElement.href = `https://hitokoto.cn/?uuid=${originalResponse.uuid}`;
+                            hitokotoElement.innerText = originalResponse.hitokoto;
+                            console.log('一言更新成功:', originalResponse.hitokoto);
+                        } else {
+                            console.error('错误：找不到 ID 为 "hitokoto_text" 的元素。');
+                        }
+                    } else {
+                        console.error('错误：代理服务器返回的数据格式不正确，缺少 "contents" 字段。');
+                    }
+                })
+                .catch(error => {
+                    console.error('请求过程中发生错误:', error);
+                });
+        }
+
+        // 1. 页面加载后立即执行一次
+        fetchAndUpdateHitokoto();
+
+        // 2. 设置定时器，每隔 10 秒执行一次
+        // 10000 毫秒 = 10 秒
+        setInterval(fetchAndUpdateHitokoto, 15000);
+    });
+</script>
+
+<!-- CDN 引入解析库 -->
+<script src="./node_modules/mammoth/mammoth.browser.js"></script>
+<script src="./indexDB.js"></script>
+<script type="module">
+    import {main} from "./test.js"
+
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
+    let data = {}
+    // 页面加载时检查 IndexedDB
+    document.addEventListener('DOMContentLoaded', async () => {
+
+        data = await getJsonData();
+        // console.log(jsonData)
+
+        if (data && Object.keys(data).length != 0) {
+            showResult(data);
+        }
+
+    });
+
+    // 转换按钮事件 通用
+    document.getElementById('convertButton').addEventListener('click', async () => {
+        const fileInput = document.getElementById('fileInput');
+        const file = fileInput.files[0];
+
+        if (!file) {
+            console.log('Please select a file.');
+            return;
+        }
+
+        if (file.size > MAX_FILE_SIZE) {
+            console.log('File size exceeds 5MB.');
+            return;
+        }
+
+        processFile(file);
+    });
+
+    // 转换按钮事件 常用1 - 通过相对路径获取文件
+    document.getElementById('convertButtonRecent1').addEventListener('click', async () => {
+        processFileFromPath('/lib/xixuan.md', 'first_file.md');
+        navTitle.textContent = '大二下(习选)题目导航';
+    });
+
+    // 转换按钮事件 常用2 - 通过相对路径获取文件
+    document.getElementById('convertButtonRecent2').addEventListener('click', async () => {
+        processFileFromPath('/lib/maoxuan.md', 'second_file.md');
+        navTitle.textContent = '大二下(毛概)题目导航';
+    });
+
+    // 转换按钮事件 常用3 - 通过相对路径获取文件
+    document.getElementById('convertButtonRecent3').addEventListener('click', async () => {
+        processFileFromPath('/lib/sizhen.md', 'third_file.md');
+        navTitle.textContent = '大一下(思政)题目导航';
+    });
+
+    // 转换按钮事件 常用4 - 通过相对路径获取文件
+    document.getElementById('convertButtonRecent4').addEventListener('click', async () => {
+        processFileFromPath('/lib/jindaishi.md', 'first_file.md');
+        navTitle.textContent = '大一上(近代史)题目导航';
+    });
+
+    // 转换按钮事件 常用5 - 通过相对路径获取文件
+    document.getElementById('convertButtonRecent5').addEventListener('click', async () => {
+        processFileFromPath('/lib/makesi.md', 'first_file.md');
+        navTitle.textContent = '大二上(马克思)题目导航';
+    });
+
+    // 处理文件的通用函数
+    async function processFile(file) {
+        try {
+            let data = await parseFile(file);
+            console.log(data);
+            data = JSON.parse(data);
+            await saveJsonData(data);
+            showResult(data);
+        } catch (error) {
+            console.error('Error processing file:', error);
+            alert(`Error: ${error.message}`);
+        }
+    }
+
+    // 从路径获取文件并处理
+    async function processFileFromPath(filePath, fileName) {
+        try {
+            const response = await fetch(filePath);
+            if (!response.ok) {
+                throw new Error(`Failed to fetch file: ${response.status}`);
+            }
+
+            // 获取ArrayBuffer
+            const arrayBuffer = await response.arrayBuffer();
+
+            // 创建完整的模拟文件对象
+            const mockFile = new File([arrayBuffer], fileName, {
+                type: 'text/markdown',
+                lastModified: Date.now()
+            });
+
+            await processFile(mockFile);
+        } catch (error) {
+            console.error('Error fetching file:', error);
+            alert(`Error: ${error.message}`);
+        }
+    }
+
+    // 保存更改
+    document.querySelector('.saveButton').addEventListener('click', async () => {
+
+        try {
+
+            await saveJsonData(data);
+            console.log('Changes saved successfully.');
+        } catch (e) {
+            console.log('Invalid JSON format.');
+        }
+    });
+
+    // 添加备注
+    // document.getElementById('addNoteButton').addEventListener('click', () => {
+    //     const textarea = document.getElementById('jsonData');
+    //     try {
+    //         const json = JSON.parse(textarea.value);
+    //         json.push({ type: 'note', content: 'User added note at ' + new Date().toLocaleString() });
+    //         textarea.value = JSON.stringify(json, null, 2);
+    //         showMessage('Note added.');
+    //     } catch (e) {
+    //         showError('Failed to add note.');
+    //     }
+    // });
+
+    // 重置数据
+    document.querySelector('.resetButton').addEventListener('click', async () => {
+        // console.log(data)
+        Object.keys(data).forEach(chapter => {
+            let value = data[chapter]
+            Object.keys(value).forEach(item => {
+                if (data[chapter][item].length > 0) {
+
+                    data[chapter][item].forEach((q, idx) => {
+                        if (q.userAnswer) {
+                            q.userAnswer = ""
+                            q.chooseRight = undefined
+
+                        }
+
+                    })
+
+                }
+
+            })
+        });
+        await saveJsonData(data)
+        // console.log(data)
+        // try {
+        //     await deleteJsonData();
+        //     document.getElementById('result').style.display = 'none';
+        //     document.getElementById('fileInput').value = '';
+        //     showMessage('Data reset. Please upload a new file.');
+        // } catch (e) {
+        //     showError('Failed to reset data: ' + e.message);
+        // }
+    });
+
+    // 解析文件
+    async function parseFile(file) {
+
+        const extension = file.name.split('.').pop().toLowerCase();
+        const arrayBuffer = await file.arrayBuffer();
+
+        if (extension === 'md') {
+            const text = new TextDecoder().decode(arrayBuffer);
+
+            return parseMarkdown(text);
+        } else if (extension === 'docx' || extension === 'doc') {
+            // const result = await mammoth.extractRawText({ arrayBuffer });
+            window.alert("暂不支持除md文件以外的文件!😝")
+            // return parseDocx(result.value);
+        } else {
+            window.alert("暂不支持除md文件以外的文件!😝")
+        }
+    }
+
+    // 解析 Markdown
+    function parseMarkdown(text) {
+        return main(text)
+
+    }
+
+    // 解析 Docx
+    function parseDocx(text) {
+        console.log(text)
+        return text
+            .split('\n')
+            .filter(line => line.trim())
+            .map(line => ({
+                type: 'paragraph',
+                content: line.trim()
+            }));
+    }
+
+
+    // 显示结果
+    // function showResult(json) {
+    //     const resultDiv = document.getElementById('result');
+    //     const textarea = document.getElementById('jsonData');
+    //     console.log(JSON.parse(json))
+    //     textarea.value = JSON.parse(json);
+    //     resultDiv.style.display = 'block';
+    //     console.log('File converted successfully.');
+    // }
+
+    // // 显示错误
+    // function showError(message) {
+    //     const messageP = document.getElementById('resultMessage');
+    //     messageP.textContent = message;
+    //     messageP.className = 'error';
+    // }
+
+    // // 显示消息
+    // function showMessage(message) {
+    //     const messageP = document.getElementById('resultMessage');
+    //     messageP.textContent = message;
+    //     messageP.className = '';
+    // }
+
+
+</script>
+<script src="./index.js"></script>
+</body>
+
+</html>
