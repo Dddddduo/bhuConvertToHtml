@@ -326,6 +326,27 @@ function insertAnswer1(str, result, title) {
 }
 
 
+function flattenToIndefinite(result) {
+    const out = {}
+    Object.keys(result || {}).forEach(chapter => {
+        const sections = result[chapter] || {}
+        const list = []
+        const seen = new Set()
+        Object.keys(sections).forEach(type => {
+            const questions = sections[type]
+            if (!Array.isArray(questions)) return
+            questions.forEach(q => {
+                if (!q || seen.has(q)) return
+                seen.add(q)
+                q.type = '不定项'
+                list.push(q)
+            })
+        })
+        out[chapter] = { '不定项': list }
+    })
+    return out
+}
+
 export function main(str) {
     let res = {};
     const changeStr = str.split(/\s+.*答案+[：:]\s+/g) //  后期改为标题
@@ -348,6 +369,7 @@ export function main(str) {
         // paresquestion2(newStr)
     }
 
+    res = flattenToIndefinite(res)
     return JSON.stringify(res, null, 2);
 }
 // main(str)

@@ -42,6 +42,23 @@
         <div class="floor">
             <button type="button" class="resetButton">清空历史记录</button>
             <button type="button" class="saveButton">保存做题记录</button>
+            <button type="button" class="statsButton">错题分析</button>
+            <label class="shuffle-toggle"><input type="checkbox" id="shuffleQuestions"><span>题目乱序</span></label>
+            <label class="shuffle-toggle"><input type="checkbox" id="shuffleOptions"><span>选项乱序</span></label>
+        </div>
+    </div>
+    <div class="stats-overlay" id="statsOverlay" hidden>
+        <div class="stats-panel" role="dialog" aria-modal="true" aria-labelledby="statsTitle">
+            <div class="stats-header">
+                <h2 id="statsTitle">错题分析</h2>
+                <button type="button" class="stats-close" id="statsClose" aria-label="关闭">×</button>
+            </div>
+            <p class="stats-sub" id="statsSub"></p>
+            <div class="stats-body" id="statsBody"></div>
+            <div class="stats-footer">
+                <button type="button" class="stats-clear" id="statsClear">清空统计</button>
+                <span class="stats-note">统计只保存在当前浏览器，重置做题记录不会清除</span>
+            </div>
         </div>
     </div>
     <div class="header" style="text-align: center; margin-bottom: 30px;">

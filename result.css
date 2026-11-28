@@ -100,17 +100,15 @@
     background-color: #4a90e2;
     color: #fff;
     display: flex;
+    flex: 0 0 auto;
     border: none;
     justify-content: center;
     align-items: center;
     border-radius: 4px;
     cursor: pointer;
-    margin-top: 10px;
-    width: 60px;
+    margin: 18px 0 0 auto;
+    width: 80px;
     height: 36px;
-    position: absolute;
-    bottom: -10px;
-    right: 0px;
 }
 
 .submit-btn:hover {
@@ -221,5 +219,317 @@
     .floor button {
         padding: 8px 16px;
         font-size: 13px;
+    }
+}
+
+/* ===== 错题分析 & 乱序开关 ===== */
+.floor {
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.floor button {
+    width: auto;
+    min-width: 112px;
+    height: 44px;
+    padding: 0 16px;
+}
+
+.shuffle-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 44px;
+    padding: 0 14px;
+    border: 1px solid #d0d7de;
+    border-radius: 4px;
+    background-color: #f8fafc;
+    color: #374151;
+    font-size: 14px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.shuffle-toggle input {
+    width: 16px;
+    height: 16px;
+    accent-color: #4a90e2;
+    cursor: pointer;
+}
+
+.shuffle-toggle:hover {
+    background-color: #eef1f5;
+}
+
+.stats-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background-color: rgba(15, 23, 42, 0.45);
+}
+
+.stats-overlay[hidden] {
+    display: none;
+}
+
+.stats-panel {
+    display: flex;
+    flex-direction: column;
+    width: min(880px, 100%);
+    max-height: 86vh;
+    overflow: hidden;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.25);
+}
+
+.stats-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid #eef1f5;
+}
+
+.stats-header h2 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.stats-close {
+    border: none;
+    background: transparent;
+    color: #6b7280;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.stats-close:hover {
+    color: #1f2937;
+}
+
+.stats-sub {
+    margin: 0;
+    padding: 10px 20px 0;
+    color: #6b7280;
+    font-size: 13px;
+}
+
+.stats-body {
+    padding: 14px 20px 18px;
+    overflow-y: auto;
+}
+
+.stats-cards {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 10px;
+    margin: 10px 0 16px;
+}
+
+.stats-card {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px;
+    text-align: center;
+    background-color: #f8fafc;
+    border: 1px solid #eef1f5;
+    border-radius: 8px;
+}
+
+.stats-card .num {
+    color: #1f2937;
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.stats-card .num.ok {
+    color: #28a745;
+}
+
+.stats-card .num.danger {
+    color: #dc3545;
+}
+
+.stats-card .label {
+    color: #6b7280;
+    font-size: 12px;
+}
+
+.stats-section {
+    margin-top: 18px;
+}
+
+.stats-section h3 {
+    margin: 0 0 10px;
+    font-size: 15px;
+}
+
+.stats-chapter-row {
+    display: grid;
+    grid-template-columns: 88px 1fr 128px;
+    align-items: center;
+    gap: 10px;
+    margin: 6px 0;
+    font-size: 13px;
+}
+
+.stats-chapter-label {
+    overflow: hidden;
+    color: #374151;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.stats-chapter-track {
+    height: 10px;
+    overflow: hidden;
+    background-color: #eef1f5;
+    border-radius: 99px;
+}
+
+.stats-chapter-track i {
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, #f59e0b, #dc3545);
+    border-radius: 99px;
+}
+
+.stats-chapter-value {
+    color: #6b7280;
+    text-align: right;
+}
+
+.stats-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 4px 0 12px;
+}
+
+.stats-tabs button {
+    padding: 6px 12px;
+    color: #374151;
+    font-size: 12px;
+    background-color: #fff;
+    border: 1px solid #d0d7de;
+    border-radius: 99px;
+    cursor: pointer;
+}
+
+.stats-tabs button.active {
+    color: #fff;
+    background-color: #4a90e2;
+    border-color: #4a90e2;
+}
+
+.stats-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.stats-table th,
+.stats-table td {
+    padding: 8px 10px;
+    text-align: left;
+    vertical-align: top;
+    border-bottom: 1px solid #eef1f5;
+}
+
+.stats-table th {
+    color: #6b7280;
+    font-weight: 600;
+    background-color: #fafbfc;
+}
+
+.stats-table td.q {
+    max-width: 420px;
+}
+
+.stats-table td.num {
+    width: 64px;
+    text-align: center;
+}
+
+.stats-tag {
+    display: inline-block;
+    padding: 1px 6px;
+    font-size: 11px;
+    border-radius: 99px;
+}
+
+.stats-tag.right {
+    color: #1e7e34;
+    background-color: #e6f4ea;
+}
+
+.stats-tag.wrong {
+    color: #b02a37;
+    background-color: #f8d7da;
+}
+
+.stats-tag.repeat {
+    color: #8a6d00;
+    background-color: #fff3cd;
+}
+
+.stats-empty {
+    padding: 18px;
+    color: #9ca3af;
+    font-size: 13px;
+    text-align: center;
+}
+
+.stats-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    border-top: 1px solid #eef1f5;
+}
+
+.stats-clear {
+    padding: 7px 14px;
+    color: #dc3545;
+    background-color: #fff;
+    border: 1px solid #dc3545;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.stats-clear:hover {
+    background-color: #f8d7da;
+}
+
+.stats-note {
+    color: #9ca3af;
+    font-size: 12px;
+}
+
+.empty-tip {
+    color: #9ca3af;
+    font-size: 15px;
+    text-align: center;
+}
+
+@media (max-width: 720px) {
+    .stats-cards {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .stats-chapter-row {
+        grid-template-columns: 70px 1fr;
+    }
+
+    .stats-chapter-value {
+        grid-column: 2;
+        text-align: left;
     }
 }
