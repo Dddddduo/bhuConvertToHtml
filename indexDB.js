@@ -1,5 +1,3 @@
-
-
 const DB_NAME = 'DocumentConverterDB';
 const STORE_NAME = 'jsonStore';
 const RECORD_ID = 'convertedJson';
@@ -23,55 +21,53 @@ function openDB() {
     });
 }
 
-// 获取 JSON 数据
+// 按 id 读取一条记录（convertedJson = 做题记录，attemptStats = 错题统计）
+async function getStoreData(id) {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction([STORE_NAME], 'readonly');
+        const store = transaction.objectStore(STORE_NAME);
+        const request = store.get(id);
+
+        request.onsuccess = () => {
+            resolve(request.result ? request.result.data : null);
+        };
+        request.onerror = () => reject(new Error('Failed to get data.'));
+    });
+}
+
+// 按 id 保存一条记录
+async function saveStoreData(id, data) {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction([STORE_NAME], 'readwrite');
+        const store = transaction.objectStore(STORE_NAME);
+        const request = store.put({ id, data });
+
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(new Error('Failed to save data.'));
+    });
+}
+
+// 获取做题记录
 async function getJsonData() {
-    try {
-        const db = await openDB();
-        return new Promise((resolve, reject) => {
-            const transaction = db.transaction([STORE_NAME], 'readonly');
-            const store = transaction.objectStore(STORE_NAME);
-            const request = store.get(RECORD_ID);
-
-            request.onsuccess = () => {
-                resolve(request.result ? request.result.data : null);
-            };
-            request.onerror = () => reject(new Error('Failed to get data.'));
-        });
-    } catch (e) {
-        throw e;
-    }
+    return getStoreData(RECORD_ID);
 }
 
-// 保存 JSON 数据
+// 保存做题记录
 async function saveJsonData(data) {
-    try {
-        const db = await openDB();
-        return new Promise((resolve, reject) => {
-            const transaction = db.transaction([STORE_NAME], 'readwrite');
-            const store = transaction.objectStore(STORE_NAME);
-            const request = store.put({ id: RECORD_ID, data });
-
-            request.onsuccess = () => resolve();
-            request.onerror = () => reject(new Error('Failed to save data.'));
-        });
-    } catch (e) {
-        throw e;
-    }
+    return saveStoreData(RECORD_ID, data);
 }
 
-// 删除 JSON 数据
+// 删除做题记录
 async function deleteJsonData() {
-    try {
-        const db = await openDB();
-        return new Promise((resolve, reject) => {
-            const transaction = db.transaction([STORE_NAME], 'readwrite');
-            const store = transaction.objectStore(STORE_NAME);
-            const request = store.delete(RECORD_ID);
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction([STORE_NAME], 'readwrite');
+        const store = transaction.objectStore(STORE_NAME);
+        const request = store.delete(RECORD_ID);
 
-            request.onsuccess = () => resolve();
-            request.onerror = () => reject(new Error('Failed to delete data.'));
-        });
-    } catch (e) {
-        throw e;
-    }
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(new Error('Failed to delete data.'));
+    });
 }
