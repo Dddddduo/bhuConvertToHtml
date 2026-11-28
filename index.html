@@ -111,10 +111,12 @@
     // 页面加载时检查 IndexedDB
     document.addEventListener('DOMContentLoaded', async () => {
 
-        data = await getJsonData();
+        const savedData = await getJsonData();
         // console.log(jsonData)
 
-        if (data && Object.keys(data).length != 0) {
+        // 只有本地确实存在做题记录时才恢复，避免把 null 覆盖到 data 上
+        if (savedData && Object.keys(savedData).length != 0) {
+            data = savedData;
             showResult(data);
         }
 
@@ -171,9 +173,12 @@
     // 处理文件的通用函数
     async function processFile(file) {
         try {
-            let data = await parseFile(file);
-            console.log(data);
-            data = JSON.parse(data);
+            let parsedData = await parseFile(file);
+            console.log(parsedData);
+            parsedData = JSON.parse(parsedData);
+            // 关键修复：把解析结果同步到模块级 data，
+            // 否则「保存做题记录」保存的仍是页面加载时的旧值（甚至是 null）
+            data = parsedData;
             await saveJsonData(data);
             showResult(data);
         } catch (error) {
@@ -208,13 +213,20 @@
 
     // 保存更改
     document.querySelector('.saveButton').addEventListener('click', async () => {
+        const saveBtn = document.querySelector('.saveButton');
 
         try {
-
             await saveJsonData(data);
             console.log('Changes saved successfully.');
+            // 给用户一个「确实保存了」的可见反馈
+            if (saveBtn) {
+                const originalText = saveBtn.textContent;
+                saveBtn.textContent = '已保存 ✓';
+                setTimeout(() => { saveBtn.textContent = originalText; }, 1200);
+            }
         } catch (e) {
-            console.log('Invalid JSON format.');
+            console.error('Failed to save records:', e);
+            alert(`保存失败：${e.message}`);
         }
     });
 
@@ -234,6 +246,10 @@
     // 重置数据
     document.querySelector('.resetButton').addEventListener('click', async () => {
         // console.log(data)
+        if (!data || Object.keys(data).length === 0) {
+            alert('当前没有做题记录');
+            return;
+        }
         Object.keys(data).forEach(chapter => {
             let value = data[chapter]
             Object.keys(value).forEach(item => {
@@ -253,6 +269,8 @@
             })
         });
         await saveJsonData(data)
+        // 清空后重新渲染：回到第一题，导航颜色一并清空
+        showResult(data);
         // console.log(data)
         // try {
         //     await deleteJsonData();

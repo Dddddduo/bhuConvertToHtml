@@ -70,8 +70,8 @@ function buildQuestionList(data,questionMap) {
         })
     });
 
-    // 点击切换题目
-    questionList.addEventListener('click', (e) => {
+    // 点击切换题目（用 onclick 覆盖，避免每次重新渲染都叠加一个监听器）
+    questionList.onclick = (e) => {
         const li = e.target.closest('li');
         if (!li) return;
         const globalIndex = parseInt(li.dataset.globalIndex);
@@ -79,7 +79,7 @@ function buildQuestionList(data,questionMap) {
         renderQuestion(data, globalIndex,questionMap);
         document.querySelectorAll('.question-list li').forEach(item => item.classList.remove('active'));
         li.classList.add('active');
-    });
+    };
 }
 
 // 渲染题目
@@ -118,7 +118,7 @@ function renderQuestion(data, globalIndex,questionMap) {
                     let chooseRight = checkSingleChoice(input.value, question.answer, optionsDiv);
                     question.chooseRight = chooseRight
                     question.userAnswer = input.value
-                    buildErrQustion(currentQuestionIndex, question)
+                    buildErrQustion(globalIndex, question)
                     hasAnswered = true; // 锁定判断
                 }
             });
@@ -130,6 +130,10 @@ function renderQuestion(data, globalIndex,questionMap) {
         // 选择之前检查历史
         if (question.userAnswer) {
             checkSingleChoice(question.userAnswer, question.answer, optionsDiv);
+            // 恢复历史选择：把当时选的单选框重新勾上
+            const historyInput = Array.from(optionsDiv.querySelectorAll('input'))
+                .find(item => item.value === question.userAnswer);
+            if (historyInput) historyInput.checked = true;
             hasAnswered = true;
         }
     } else {
@@ -160,6 +164,12 @@ function renderQuestion(data, globalIndex,questionMap) {
             optionsDiv.appendChild(label);
         });
         if (question.userAnswer) {
+            // 恢复历史选择：把当时选的选项放回 selectedAnswers，
+            // 否则刷新后再次点「提交」会用空选择覆盖已保存的记录
+            selectedAnswers = question.userAnswer.split('');
+            optionsDiv.querySelectorAll('input').forEach(input => {
+                if (selectedAnswers.includes(input.value)) input.checked = true;
+            });
             checkMultiChoice(optionsDiv, question.answer, question.userAnswer);
         }
         // 提交按钮
@@ -171,7 +181,7 @@ function renderQuestion(data, globalIndex,questionMap) {
             let chooseRight = checkMultiChoice(optionsDiv, question.answer, sortedSelected)
             question.chooseRight = chooseRight
             question.userAnswer = sortedSelected
-            buildErrQustion(currentQuestionIndex, question)
+            buildErrQustion(globalIndex, question)
 
         });
         questionDiv.appendChild(submitBtn);
@@ -236,6 +246,8 @@ function showResult(data) {
 
     const questionMap = [];
     // console.log(data)
+    // 每次整体渲染都从第一题开始，避免记录恢复/清空后 currentQuestionIndex 仍指向旧题
+    currentQuestionIndex = 0;
     buildQuestionList(data,questionMap);
     renderQuestion(data, 0,questionMap);
 
